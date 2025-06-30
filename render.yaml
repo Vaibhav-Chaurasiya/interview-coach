@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: whisper-api
+    runtime: python
+    buildCommand: ./build.sh && pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
