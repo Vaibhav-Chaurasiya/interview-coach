@@ -1,22 +1,19 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-import whisper
 import os
 import nltk
 import fitz  # PyMuPDF
+import subprocess
 from nltk.sentiment import SentimentIntensityAnalyzer
 
-# NLTK sentiment setup
+# 📥 Download NLTK sentiment model
 nltk.download("vader_lexicon")
 sia = SentimentIntensityAnalyzer()
 
-# Whisper model
-model = whisper.load_model("tiny")
-
-# FastAPI app
+# 🚀 Initialize FastAPI app
 app = FastAPI()
 
-# CORS for frontend access
+# 🌐 Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Transcribe voice + sentiment
+# 🎤 Transcribe voice using whisper.cpp + sentiment analysis
 @app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
     try:
@@ -32,18 +29,33 @@ async def transcribe(file: UploadFile = File(...)):
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
-        result = model.transcribe(file_path)
+        result_txt = "transcription.txt"
+
+        # 🔁 Run whisper.cpp
+        result = subprocess.run(
+            ["./whisper.cpp/main", "-m", "models/ggml-tiny.en.bin", "-f", file_path, "-otxt"],
+            capture_output=True, text=True
+        )
+
         os.remove(file_path)
 
-        text = result.get("text", "").strip()
+        if result.returncode != 0:
+            return {"error": f"Whisper.cpp failed: {result.stderr}"}
+
+        if not os.path.exists(result_txt):
+            return {"error": "Transcription output not found."}
+
+        with open(result_txt, "r") as f:
+            text = f.read().strip()
+        os.remove(result_txt)
+
+        if not text:
+            return {"error": "Transcription was empty."}
+
+        # 😊 Sentiment analysis
         sentiment_score = sia.polarity_scores(text)
         compound = sentiment_score["compound"]
-
-        label = (
-            "Positive" if compound > 0.05
-            else "Negative" if compound < -0.05
-            else "Neutral"
-        )
+        label = "Positive" if compound > 0.05 else "Negative" if compound < -0.05 else "Neutral"
 
         return {
             "text": text,
@@ -51,10 +63,10 @@ async def transcribe(file: UploadFile = File(...)):
         }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Exception occurred: {str(e)}"}
 
 
-# Extract text from PDF (resume or JD)
+# 📄 Extract text from PDF (resume or JD)
 @app.post("/extract-pdf-text")
 async def extract_pdf_text(file: UploadFile = File(...)):
     try:
