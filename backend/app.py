@@ -11,7 +11,7 @@ nltk.download("vader_lexicon")
 sia = SentimentIntensityAnalyzer()
 
 # Whisper model
-model = whisper.load_model("base")
+model = whisper.load_model("tiny")
 
 # FastAPI app
 app = FastAPI()
