@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global body font and layout */
+body {
+  @apply font-inter bg-gray-50 text-gray-900;
+}
+
+/* Smooth transitions for interactive elements */
+button, a {
+  @apply transition duration-200 ease-in-out;
+}
+
+/* Optional: Custom scrollbar for desktop UX */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db; /* Tailwind's gray-300 */
+  border-radius: 10px;
+}
