@@ -1,7 +1,9 @@
 services:
   - type: web
-    name: whisper-api
-    runtime: python
-    buildCommand: cd backend pip install -r requirements.txt
-    startCommand: cd backend && uvicorn app:app --host 0.0.0.0 --port 10000
+    name: interview-coach-backend
+    env: python
     plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app:app --host=0.0.0.0 --port=10000"
+    rootDir: backend
+   
